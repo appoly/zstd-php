@@ -51,7 +51,7 @@ $outputCallback = function ($outputChunk) {
 
 ZSTD::decompressDataFromStream(
     inputStream: $inputStream,
-    outputCallback: $outputStream
+    outputCallback: $outputCallback
 );
 
 fclose($inputStream);
@@ -70,7 +70,7 @@ $outputCallback = function ($outputChunk) {
 
 ZSTD::compressDataToStream(
     inputStream: $inputStream,
-    outputCallback: $outputStream
+    outputCallback: $outputCallback
 );
 
 fclose($inputStream);
