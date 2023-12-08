@@ -38,7 +38,7 @@ class ZSTD
         }
     }
 
-    public static function compressDataToStream($inputStream, $outputStream): void
+    public static function compressDataFromStream(&$inputStream, $outputCallback): void
     {
         $zstd = self::getZstdPath();
 
@@ -50,17 +50,17 @@ class ZSTD
         $process->setInput($inputStream);
         $process->start();
 
-        // Get output incrementally and write to the output stream
+        // Get output incrementally
         foreach ($process as $type => $data) {
             if ($type === Process::OUT) {
-                fwrite($outputStream, $data);
+                $outputCallback($data);
             }
         }
 
         $process->wait();
     }
 
-    public static function decompressDataToStream(&$inputStream, &$outputStream): void
+    public static function decompressDataFromStream(&$inputStream, $outputCallback): void
     {
         $zstd = self::getZstdPath();
         $process = new Process([
@@ -72,10 +72,10 @@ class ZSTD
         $process->setInput($inputStream);
         $process->start();
 
-        // Get output incrementally and write to the output stream
+        // Get output incrementally and execute the callback for each chunk
         foreach ($process as $type => $data) {
             if ($type === Process::OUT) {
-                fwrite($outputStream, $data);
+                $outputCallback($data);
             }
         }
 

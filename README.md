@@ -38,18 +38,23 @@ ZSTD::compress('path/to/file', 'path/to/output/file.zst');
 
 ### Advanced
 
-Decompress from a stream (can be used with custom filesystems such as S3):
+Decompress from a stream, and handle the output yourself in chunks.
 
 ```php
 use Appoly\ZstdPhp\ZSTD;
 
 $inputStream = fopen('path/to/file.zst', 'r');
-$outputStream = fopen('path/to/output/file', 'w');
+$outputCallback = function ($outputChunk) {
+    // Do something with the output chunk
+    echo $outputChunk;
+};
 
-ZSTD::decompressDataToStream($inputStream, $outputStream);
+ZSTD::decompressDataFromStream(
+    inputStream: $inputStream,
+    outputCallback: $outputStream
+);
 
 fclose($inputStream);
-fclose($outputStream);
 ```
 
 Compress to a stream (can be used with custom filesystems such as S3):
@@ -58,12 +63,17 @@ Compress to a stream (can be used with custom filesystems such as S3):
 use Appoly\ZstdPhp\ZSTD;
 
 $inputStream = fopen('path/to/file', 'r');
-$outputStream = fopen('path/to/output/file.zst', 'w');
+$outputCallback = function ($outputChunk) {
+    // Do something with the output chunk
+    echo $outputChunk;
+};
 
-ZSTD::compressDataToStream($inputStream, $outputStream);
+ZSTD::compressDataToStream(
+    inputStream: $inputStream,
+    outputCallback: $outputStream
+);
 
 fclose($inputStream);
-fclose($outputStream);
 ```
 
 ## License
