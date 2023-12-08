@@ -1,0 +1,19 @@
+{
+    "name": "appoly/zstd-php",
+    "description": "PHP wrapper for zstd",
+    "require": {
+        "symfony/process": "^7.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Appoly\\ZstdPhp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "John Wedgbury",
+            "email": "john@appoly.co.uk"
+        }
+    ]
+}
