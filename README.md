@@ -4,12 +4,11 @@ Can be used in PHP without the need to install an additional extension.
 
 ## Dependencies
 
-ZSTD
+ZSTD, example installation on Ubuntu:
 
-Example:
-
+```bash
 sudo apt install zstd
-
+````
 
 ## Installation
 
