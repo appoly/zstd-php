@@ -1,6 +1,6 @@
 # PHP ZSTD
 
-Can be used in PHP without the need to install an additional extension.
+PHP library to allow [Zstandard](https://facebook.github.io/zstd/) compression and decompression, without the need to install an additional PHP extension.
 
 ## Dependencies
 
@@ -38,7 +38,7 @@ ZSTD::compress('path/to/file', 'path/to/output/file.zst');
 
 ### Advanced
 
-Decompress from a stream, and handle the output yourself in chunks.
+Decompress from a stream, and handle the output yourself in chunks. Can be used with custom filesystems etc to minimise memory usage.
 
 ```php
 use Appoly\ZstdPhp\ZSTD;
@@ -57,7 +57,7 @@ ZSTD::decompressDataFromStream(
 fclose($inputStream);
 ```
 
-Compress to a stream (can be used with custom filesystems such as S3):
+Compress from a stream, and handle the output yourself in chunks. Can be used with custom filesystems etc to minimise memory usage.
 
 ```php
 use Appoly\ZstdPhp\ZSTD;
