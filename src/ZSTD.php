@@ -42,10 +42,16 @@ class ZSTD
     {
         $zstd = self::getZstdPath();
 
-        $process = new Process([
-            $zstd,
-            '--force',
-        ]);
+        $process = new Process(
+            [
+                $zstd,
+                '--force',
+            ],
+            null,
+            null,
+            null,
+            0,
+        );
 
         $process->setInput($inputStream);
         $process->start();
@@ -63,11 +69,17 @@ class ZSTD
     public static function decompressDataFromStream(&$inputStream, $outputCallback): void
     {
         $zstd = self::getZstdPath();
-        $process = new Process([
-            $zstd,
-            '--force',
-            '-d',
-        ]);
+        $process = new Process(
+            [
+                $zstd,
+                '--force',
+                '-d',
+            ],
+            null,
+            null,
+            null,
+            0,
+        );
 
         $process->setInput($inputStream);
         $process->start();
