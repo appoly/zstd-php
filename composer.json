@@ -2,6 +2,7 @@
     "name": "appoly/zstd-php",
     "description": "PHP wrapper for zstd",
     "require": {
+        "php": "^8.0",
         "symfony/process": "^6.0"
     },
     "license": "MIT",
@@ -14,6 +15,10 @@
         {
             "name": "John Wedgbury",
             "email": "john@appoly.co.uk"
+        },
+        {
+            "name": "James Merrix",
+            "email": "james@appoly.co.uk"
         }
     ]
 }
