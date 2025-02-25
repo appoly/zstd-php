@@ -3,60 +3,119 @@
 namespace Appoly\ZstdPhp;
 
 use Symfony\Component\Process\Process;
+use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class ZSTD
 {
-    public static function compress(string $inputPath, ?string $outputPath = null): false|string
+    /**
+     * Compress a file using zstd.
+     *
+     * @param string      $inputPath  Path to the input file.
+     * @param string|null $outputPath Optional path for the output file.
+     *
+     * @return string The command output.
+     *
+     * @throws \RuntimeException If the compression process fails.
+     */
+    public static function compress(string $inputPath, ?string $outputPath = null): string
     {
         $zstd = self::getZstdPath();
 
-        // Escape the input and output paths
-        $inputPath = escapeshellarg($inputPath);
-        $outputPath = escapeshellarg($outputPath);
-
-        // Compress the data
-        if (empty($outputPath)) {
-            return exec("$zstd --force -o $inputPath.zst $inputPath");
+        if (!empty($outputPath)) {
+            $command = [$zstd, '--force', '-o', $outputPath, $inputPath];
         } else {
-            return exec("$zstd --force -o $outputPath $inputPath");
+            $command = [$zstd, '--force', '-o', $inputPath . '.zst', $inputPath];
         }
+
+        $process = new Process($command);
+        $process->mustRun(); // Automatically throws an exception if the process fails
+
+        return $process->getOutput();
     }
 
-    public static function decompress(string $inputPath, ?string $outputPath = null): false|string
+    /**
+     * Decompress a file using zstd.
+     *
+     * @param string      $inputPath  Path to the compressed file.
+     * @param string|null $outputPath Optional path for the decompressed file.
+     *
+     * @return string The command output.
+     *
+     * @throws \RuntimeException If the decompression process fails.
+     */
+    public static function decompress(string $inputPath, ?string $outputPath = null): string
     {
         $zstd = self::getZstdPath();
 
-        // Escape the input and output paths
-        $inputPath = escapeshellarg($inputPath);
-        $outputPath = escapeshellarg($outputPath);
-
-        // Decompress the data
-        if (empty($outputPath)) {
-            return exec("$zstd --force -d $inputPath");
+        if (!empty($outputPath)) {
+            $command = [$zstd, '--force', '-d', '-o', $outputPath, $inputPath];
         } else {
-            return exec("$zstd --force -d -o $outputPath $inputPath");
+            $command = [$zstd, '--force', '-d', $inputPath];
         }
+
+        $process = new Process($command);
+        $process->mustRun();
+
+        return $process->getOutput();
     }
 
-    public static function compressDataFromStream(&$inputStream, $outputCallback): void
+    /**
+     * Compress data from a stream, providing output in chunks.
+     *
+     * @param mixed      $inputStream    The input stream or data to compress.
+     * @param callable   $outputCallback Callback function to handle each output chunk.
+     * @param float|null $timeout        Optional timeout in seconds (null for default).
+     *
+     * @return void
+     *
+     * @throws \RuntimeException If the stream compression fails.
+     */
+    public static function compressDataFromStream($inputStream, callable $outputCallback, ?float $timeout = null): void
     {
         $zstd = self::getZstdPath();
+        self::runStreamProcess([$zstd, '--force'], $inputStream, $outputCallback, 'Stream compression failed', $timeout);
+    }
 
-        $process = new Process(
-            [
-                $zstd,
-                '--force',
-            ],
-            null,
-            null,
-            null,
-            0,
-        );
+    /**
+     * Decompress data from a stream, providing output in chunks.
+     *
+     * @param mixed      $inputStream    The input stream or data to decompress.
+     * @param callable   $outputCallback Callback function to handle each output chunk.
+     * @param float|null $timeout        Optional timeout in seconds (null for default).
+     *
+     * @return void
+     *
+     * @throws \RuntimeException If the stream decompression fails.
+     */
+    public static function decompressDataFromStream($inputStream, callable $outputCallback, ?float $timeout = null): void
+    {
+        $zstd = self::getZstdPath();
+        self::runStreamProcess([$zstd, '--force', '-d'], $inputStream, $outputCallback, 'Stream decompression failed', $timeout);
+    }
 
+    /**
+     * Run a stream process and handle output.
+     *
+     * @param array      $command        Command to execute.
+     * @param mixed      $inputStream    The input stream or data.
+     * @param callable   $outputCallback Callback function to handle each output chunk.
+     * @param string     $errorMessage   Error message prefix if the process fails.
+     * @param float|null $timeout        Optional timeout in seconds.
+     *
+     * @return void
+     *
+     * @throws \RuntimeException If the process fails.
+     */
+    private static function runStreamProcess(array $command, $inputStream, callable $outputCallback, string $errorMessage, ?float $timeout = null): void
+    {
+        $process = new Process($command);
+        if ($timeout !== null) {
+            $process->setTimeout($timeout);
+        }
         $process->setInput($inputStream);
         $process->start();
 
-        // Get output incrementally
         foreach ($process as $type => $data) {
             if ($type === Process::OUT) {
                 $outputCallback($data);
@@ -64,48 +123,26 @@ class ZSTD
         }
 
         $process->wait();
-    }
 
-    public static function decompressDataFromStream(&$inputStream, $outputCallback): void
-    {
-        $zstd = self::getZstdPath();
-        $process = new Process(
-            [
-                $zstd,
-                '--force',
-                '-d',
-            ],
-            null,
-            null,
-            null,
-            0,
-        );
-
-        $process->setInput($inputStream);
-        $process->start();
-
-        // Get output incrementally and execute the callback for each chunk
-        foreach ($process as $type => $data) {
-            if ($type === Process::OUT) {
-                $outputCallback($data);
-            }
+        if (!$process->isSuccessful()) {
+            throw new \RuntimeException($errorMessage . ': ' . $process->getErrorOutput());
         }
-
-        $process->wait();
     }
 
+    /**
+     * Retrieve the path to the zstd executable.
+     *
+     * @return string The path to the zstd executable.
+     *
+     * @throws \Exception If zstd is not installed.
+     */
     private static function getZstdPath(): string
     {
-        // Find the local zstd library
-        // Use either which zstd or where zstd depending on the OS
-        $zstd = exec('which zstd');
-        if (empty($zstd)) {
-            $zstd = exec('where zstd');
-        }
+        $finder = new ExecutableFinder();
+        $zstd = $finder->find('zstd');
 
-        // If not installed, throw an exception
-        if (empty($zstd)) {
-            throw new \Exception('zstd not installed');
+        if (!$zstd) {
+            throw new \Exception('zstd is not installed');
         }
 
         return $zstd;
