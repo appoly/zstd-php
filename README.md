@@ -4,11 +4,11 @@ PHP library to allow [Zstandard](https://facebook.github.io/zstd/) compression a
 
 ## Dependencies
 
-ZSTD, example installation on Ubuntu:
+ZSTD must be installed on your system. Example installation on Ubuntu:
 
 ```bash
 sudo apt install zstd
-````
+```
 
 ## Installation
 
@@ -36,9 +36,21 @@ use Appoly\ZstdPhp\ZSTD;
 ZSTD::compress('path/to/file', 'path/to/output/file.zst');
 ```
 
+If no output path is provided, the compressed file will be saved with the `.zst` extension added:
+
+```php
+ZSTD::compress('path/to/file'); // Creates path/to/file.zst
+```
+
+For decompression, if no output path is provided, the file will be decompressed in place:
+
+```php
+ZSTD::decompress('path/to/file.zst'); // Creates path/to/file
+```
+
 ### Advanced
 
-Decompress from a stream, and handle the output yourself in chunks. Can be used with custom filesystems etc to minimise memory usage.
+Decompress from a stream, and handle the output yourself in chunks. Can be used with custom filesystems etc to minimize memory usage.
 
 ```php
 use Appoly\ZstdPhp\ZSTD;
@@ -57,7 +69,7 @@ ZSTD::decompressDataFromStream(
 fclose($inputStream);
 ```
 
-Compress from a stream, and handle the output yourself in chunks. Can be used with custom filesystems etc to minimise memory usage.
+Compress from a stream, and handle the output yourself in chunks. Can be used with custom filesystems etc to minimize memory usage.
 
 ```php
 use Appoly\ZstdPhp\ZSTD;
@@ -68,7 +80,7 @@ $outputCallback = function ($outputChunk) {
     echo $outputChunk;
 };
 
-ZSTD::compressDataToStream(
+ZSTD::compressDataFromStream(
     inputStream: $inputStream,
     outputCallback: $outputCallback
 );
@@ -76,10 +88,27 @@ ZSTD::compressDataToStream(
 fclose($inputStream);
 ```
 
+You can also specify a timeout for stream operations:
+
+```php
+ZSTD::compressDataFromStream(
+    inputStream: $inputStream,
+    outputCallback: $outputCallback,
+    timeout: 60.0 // Timeout in seconds
+);
+```
+
+## Exception Handling
+
+The library throws exceptions when operations fail:
+
+- `\Exception` if ZSTD is not installed on the system
+- `\RuntimeException` if compression or decompression processes fail
+
 ## License
 MIT License
 
-Copyright (c) 2023 Appoly Ltd
+Copyright (c) 2025 Appoly Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
