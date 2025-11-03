@@ -2,7 +2,8 @@
     "name": "appoly/zstd-php",
     "description": "PHP wrapper for zstd",
     "require": {
-        "symfony/process": "^6.0"
+        "php": "^8.0",
+        "symfony/process": "^6.0|^7.0"
     },
     "license": "MIT",
     "autoload": {
